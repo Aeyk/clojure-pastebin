@@ -1,4 +1,4 @@
-(ns ixio.db
+ (ns ixio.db
   (:require [clojure.java.jdbc :refer :all])
   (:gen-class))
 
@@ -23,7 +23,7 @@
       (create-table-ddl :pastes
         [[:timestamp :datetime :default :current_timestamp ]
          [:id "INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL"]
-         [:body :clob]]))
+         [:body "CLOB NOT NULL"]]))
        (catch Exception e
          (println (.getMessage e)))))
 
@@ -40,8 +40,10 @@
 
 (defn get-pastes-by-id [id]
   (let [query-string (str "SELECT id,body FROM pastes WHERE id="id ";")]
-    query-string
     (query my-db [query-string])))
+
+(defn get-last-paste []
+  (query my-db "SELECT * FROM    pastes WHERE ID = (SELECT MAX(ID) FROM pastes);"))
 
 (defn create-paste [req]
    ;; req
