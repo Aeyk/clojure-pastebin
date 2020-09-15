@@ -9,9 +9,11 @@
             [compojure.response :as response]))
 
 (http/defroutes main-routes
-  (http/GET "/" [] (db/get-all-pastes)#_(views/index-page))
+  (http/GET "/" [] (views/index-page))
   (http/POST "/" req  
-    (db/create-paste (:params req))) 
+    (db/create-paste (:params req)))
+  (http/GET "/:id" [id]
+    (db/get-pastes-by-id id))
   (route/resources "/")
   (route/not-found "Page not found"))
 

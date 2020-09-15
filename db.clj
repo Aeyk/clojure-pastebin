@@ -21,8 +21,9 @@
   (try
     (db-do-commands my-db
       (create-table-ddl :pastes
-        [[:timestamp :datetime :default :current_timestamp ]
-         [:body :clob]]))
+        #{[:timestamp :datetime :default :current_timestamp ]
+          [:id "INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL"]
+         [:body :clob]}))
        (catch Exception e
          (println (.getMessage e)))))
 
@@ -37,10 +38,13 @@
 (defn get-all-pastes []
   (query my-db ["SELECT * FROM pastes;"]))
 
+(defn get-pastes-by-id [id]
+  (query my-db [(str "SELECT * FROM pastes WHERE id="id ";")]))
+
 (defn create-paste [req]
    ;; req
   (insert! my-db :pastes req)) ;; TODO how to sanitize
 
-(create-db)
+#_(create-db)
 #_(create-paste {:body "Hello, World"})
 #_(drop-pastes)
