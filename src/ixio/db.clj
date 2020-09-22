@@ -38,7 +38,7 @@
 (defn get-all-pastes []
   (query my-db ["SELECT * FROM pastes;"]))
 
-(defn get-pastes-by-id [id]
+(defn get-paste-by-id [id]
   (let [query-string (str "SELECT id,body FROM pastes WHERE id="id ";")]
     (query my-db [query-string])))
 

@@ -1,14 +1,11 @@
 (ns ixio.views
-  (:require [hiccup.core :as hiccup]
-            [hiccup.page :as page]))
+  (:require
+   [ixio.db :as db]
+   [hiccup.core :as hiccup]
+   [hiccup.page :as page]))
 
-(def url "http://localhost:3001/")
-
-(defn index-page []
-  (page/html5
-    [:body
-     [:pre
-      (clojure.string/replace 
+(def url "http://localhost:3000/")
+(def man-string (clojure.string/replace 
         "$URL_STRING(1)  	MAN	 	$URL_STRING(1)
 
 NAME
@@ -27,7 +24,7 @@ GET
         	raw text
 
 POST
-	$ curl -X POST $URL_STRING -d \"body=$@\" %                                    
+	$ curl -X POST $URL_STRING -d \"body=$@\" %
 
 
 EXAMPLES: TODO
@@ -37,6 +34,19 @@ CLIENT: TODO
 CAVEATS:
     Paste at your risk. Be nice please. If you are distributing software that
     uses this automatically, talk to me first. If you are distributing malware
-    please go away forever."
-        "$URL_STRING", url)]]))
+    please go away forever.
+"
+        "$URL_STRING", url))
+(defn index-page []
+  (page/html5
+    [:body
+     [:pre
+      man-string]]))
 
+(defn individual-paste [row]
+  (page/html5
+    (:body
+     (clojure.edn/read-string 
+       (str (first (db/get-paste-by-id row)))))))
+
+;; #object[org.eclipse.jetty.server.HttpInput]

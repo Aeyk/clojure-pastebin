@@ -1,2 +1,2 @@
 #!/usr/bin/env bash
-curl -X POST localhost:3001 -d "body=$@" 
+curl -X POST localhost:3000 -d "body=$@" 

@@ -11,12 +11,18 @@
 (http/defroutes main-routes
   (http/GET "/" [] (views/index-page)#_(db/get-all-pastes))
   (http/POST "/" req  
-    (db/create-paste (:params req))
-    (str ixio/url (:body (db/get-last-paste))))
+    (if (empty? (:body (:params req)))
+      (views/index-page)
+      (do
+        (let [ins (db/create-paste req)
+              id (db/get-last-paste)]      
+          (str ixio/url(:id (first id)) "\n"
+            #_req)))))
   (http/GET "/favicon.ico" []
     "Hello World") 
   (http/GET "/:id" [id]
-    (db/get-pastes-by-id id))
+    (views/individual-paste id)
+    #_(db/get-pastes-by-id id))
   (route/resources "/")
   (route/not-found "Page not found"))
 
