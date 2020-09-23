@@ -1,0 +1,9 @@
+* TODO add actual password hashing
+* TODO add optional email address
+** TODO reset password email 
+* TODO private pastes
+would need to modify my table so that pastes can have an 
+optional belongs_to: FKID and required private: bool columns
+* TODO session management / cookies
+* TODO UI
+
