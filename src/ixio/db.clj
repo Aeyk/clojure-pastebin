@@ -39,7 +39,7 @@
   (query my-db ["SELECT * FROM pastes;"]))
 
 (defn get-paste-by-id [id]
-  (query my-db [ "SELECT id,body FROM pastes WHERE id= ?" id ]))
+  (query my-db [ "SELECT * FROM pastes WHERE id= ?" id ]))
 
 (defn get-last-paste []
   (query my-db "SELECT * FROM    pastes WHERE ID = (SELECT MAX(ID) FROM pastes);"))
@@ -47,6 +47,24 @@
 (defn create-paste [req]
    ;; req
   (insert! my-db :pastes {:body req})) ;; TODO how to sanitize
+
+
+
+(defn get-all-users []
+  (query my-db ["SELECT * FROM users;"]))
+
+(defn get-user-by-id [id]
+  (query my-db [ "SELECT * FROM users WHERE id= ?" id ]))
+
+(defn get-last-user []
+  (query my-db "SELECT * FROM    users WHERE ID = (SELECT MAX(ID) FROM users);"))
+
+(defn create-user [req]
+   ;; req
+  (insert! my-db :users req)) 
+
+
+
 
 #_(create-db)
 #_(create-paste {:body "Hello, World"})

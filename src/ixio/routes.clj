@@ -24,6 +24,16 @@
   (http/GET "/:id" [id]
     (views/individual-paste id)
     #_(db/get-pastes-by-id id))
+  (http/POST "/user/" req
+    #_(str (:params req))
+    #_(views/new-account-page req)
+    (if (empty? (:params req))
+      (views/new-account-page req)
+      (do
+        (let [ins (db/create-user (:params req))
+              id (db/get-last-user)]      
+          (str ixio/url(:id (first id)) "\n"
+            #_req)))))
   (route/resources "/")
   (route/not-found "Page not found"))
 

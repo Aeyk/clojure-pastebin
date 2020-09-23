@@ -48,5 +48,13 @@ CAVEATS:
     (:body
      (clojure.edn/read-string 
        (str (first (db/get-paste-by-id row)))))))
-
 ;; #object[org.eclipse.jetty.server.HttpInput]
+
+(defn new-account-page [row]
+  (page/html5
+    [:body
+     [:pre
+      (clojure.edn/read-string 
+       (str (first (db/get-last-user))))]]))
+
+
