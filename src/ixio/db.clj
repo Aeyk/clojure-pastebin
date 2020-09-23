@@ -39,8 +39,7 @@
   (query my-db ["SELECT * FROM pastes;"]))
 
 (defn get-paste-by-id [id]
-  (let [query-string (str "SELECT id,body FROM pastes WHERE id="id ";")]
-    (query my-db [query-string])))
+  (query my-db [ "SELECT id,body FROM pastes WHERE id= ?" id ]))
 
 (defn get-last-paste []
   (query my-db "SELECT * FROM    pastes WHERE ID = (SELECT MAX(ID) FROM pastes);"))

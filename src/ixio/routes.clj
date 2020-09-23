@@ -3,6 +3,7 @@
             [ixio.db :as db]
             [ixio.views :as views]
             [hiccup.middleware :as mw]
+            [ring.middleware.session :as session]
             [compojure.core :as http]
             [compojure.route :as route]
             [compojure.handler :as handler]
