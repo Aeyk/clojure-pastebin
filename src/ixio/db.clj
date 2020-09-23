@@ -56,6 +56,10 @@
 (defn get-user-by-id [id]
   (query my-db [ "SELECT * FROM users WHERE id= ?" id ]))
 
+(defn get-user-by-username [username]
+  (clojure.java.jdbc/query my-db [ "SELECT * FROM users WHERE username= ?" username ]))
+
+
 (defn get-last-user []
   (query my-db "SELECT * FROM    users WHERE ID = (SELECT MAX(ID) FROM users);"))
 

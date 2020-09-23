@@ -57,4 +57,14 @@ CAVEATS:
       (clojure.edn/read-string 
        (str (first (db/get-last-user))))]]))
 
+(defn logged-in-successful []
+  (page/html5 [:body "SUCCESS!"]))
+(defn logged-in-unsuccessful []
+  (page/html5 [:body "Please try again, sir."]))
+(defn individual-user [row]
+  (page/html5
+    (:body
+     (db/get-user-by-id row))))
+;; #object[org.eclipse.jetty.server.HttpInput]
+
 

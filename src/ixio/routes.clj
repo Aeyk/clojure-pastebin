@@ -24,6 +24,9 @@
   (http/GET "/:id" [id]
     (views/individual-paste id)
     #_(db/get-pastes-by-id id))
+    (http/GET "/user/:id" [id]
+    (views/individual-user id)
+    #_(db/get-pastes-by-id id))
   (http/POST "/user/" req
     #_(str (:params req))
     #_(views/new-account-page req)
@@ -32,8 +35,16 @@
       (do
         (let [ins (db/create-user (:params req))
               id (db/get-last-user)]      
-          (str ixio/url(:id (first id)) "\n"
+          (str ixio/url "user/"(:id (first id)) "\n"
             #_req)))))
+  (http/POST "/login/" req
+    req
+    (if (= (:pwordhash (:params req))
+          (:pwordhash (first (db/get-user-by-username
+                               (:username (:params req))))))
+      (views/logged-in-successful)
+      (views/logged-in-unsuccessful)))
+  
   (route/resources "/")
   (route/not-found "Page not found"))
 
