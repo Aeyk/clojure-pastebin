@@ -11,20 +11,40 @@
 
 (http/defroutes main-routes
   (http/GET "/" [] (views/index-page)#_(db/get-all-pastes))
-  (http/POST "/" req  
+  (http/GET "/pastes" []    
+    (hiccup.page/html5
+
+      (for [p (db/get-all-pastes)]
+        [:div [:p ][:pre (str (:id p) "\t" (:body p) "\n")]])))
+
+  (http/GET "/paste/:id" id
+    (views/individual-paste (:id (:params id))))
+  
+  (http/POST "/paste" req      
     (if (empty? (:body (:params req)))
       (views/index-page)
-      (do
-        (let [ins (db/create-paste req)
-              id (db/get-last-paste)]      
-          (str ixio/url(:id (first id)) "\n"
-            #_req)))))
+      (str ixio/url "paste/"
+        ((keyword "last_insert_rowid()")
+         (first (db/create-paste (:form-params req)))) "\n")      
+      #_(do (db/create-paste (:form-params req))
+          (str (into {}
+                 (first (db/get-last-paste)))))
+      #_(get 
+          "body")
+      
+      #_(do
+          (let [ins (db/create-paste
+                      (into {}
+                        (clojure.edn/read-string (:body (:params req)))))
+                id (db/get-last-paste)]      
+            (str ixio/url "/paste/"((keyword "last_insert_rowid()")
+                                    (first ins)))))))
   (http/GET "/favicon.ico" []
     "Hello World") 
   (http/GET "/:id" [id]
     (views/individual-paste id)
     #_(db/get-pastes-by-id id))
-    (http/GET "/user/:id" [id]
+  (http/GET "/user/:id" [id]
     (views/individual-user id)
     #_(db/get-pastes-by-id id))
   (http/POST "/user/" req

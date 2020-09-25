@@ -45,10 +45,8 @@ CAVEATS:
 
 (defn individual-paste [row]
   (page/html5
-    (:body
-     (clojure.edn/read-string 
-       (str (first (db/get-paste-by-id row)))))))
-;; #object[org.eclipse.jetty.server.HttpInput]
+    [:body 
+     (db/get-paste-by-id row)]))
 
 (defn new-account-page [row]
   (page/html5
