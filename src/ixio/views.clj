@@ -43,10 +43,28 @@ CAVEATS:
      [:pre
       man-string]]))
 
+(defn cboolean
+  ([i]
+   (not (zero? i)))
+  ([i & is]
+   (map cboolean (conj is i))))
+
 (defn individual-paste [row]
-  (page/html5
-    [:body 
-     (db/get-paste-by-id row)]))
+  (let [paste (clojure.edn/read-string
+                (str (first (db/get-paste-by-id row))))
+        body (:body paste)
+        id (:id paste)
+        private (:private paste)]
+    (page/html5
+      [:body
+       [:table
+        [:tr [:td "ID"]
+         [:td "PRIVATE? "] [:td "PASTE"]]
+        [:tr
+         [:td id]
+         [:td (cboolean private)]
+         [:td body]]  
+        ]])))
 
 (defn new-account-page [row]
   (page/html5
