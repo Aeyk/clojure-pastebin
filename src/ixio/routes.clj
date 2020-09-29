@@ -12,10 +12,7 @@
 (http/defroutes main-routes
   (http/GET "/" [] (views/index-page)#_(db/get-all-pastes))
   (http/GET "/pastes" []    
-    (hiccup.page/html5
-
-      (for [p (db/get-all-pastes)]
-        [:div [:p ][:pre (str (:id p) "\t" (:body p) "\n")]])))
+    (views/pastes-page))
 
   (http/GET "/paste/:id" id
     (views/individual-paste (:id (:params id))))

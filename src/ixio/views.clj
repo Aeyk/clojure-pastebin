@@ -43,6 +43,19 @@ CAVEATS:
      [:pre
       man-string]]))
 
+(defn pastes-page []
+  (page/html5
+    (for [p (db/get-all-pastes)]
+      [:div 
+       [:table
+        [:tr [:td "ID"] [:td "PRIVATE?"] [:td "BODY"]]
+        [:tr
+         [:td
+          (:id p)]
+         [:td
+          (cboolean (:private p))]
+         [:td
+          (:body p)]]]])))
 (defn cboolean
   ([i]
    (not (zero? i)))
@@ -75,8 +88,10 @@ CAVEATS:
 
 (defn logged-in-successful []
   (page/html5 [:body "SUCCESS!"]))
+
 (defn logged-in-unsuccessful []
   (page/html5 [:body "Please try again, sir."]))
+
 (defn individual-user [row]
   (page/html5
     (:body
