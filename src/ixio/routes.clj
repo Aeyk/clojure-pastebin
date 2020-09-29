@@ -39,10 +39,10 @@
                                     (first ins)))))))
   (http/GET "/favicon.ico" []
     "Hello World") 
-  (http/GET "/:id" [id]
+  #_(http/GET "/:id" [id]
     (views/individual-paste id)
     #_(db/get-pastes-by-id id))
-  (http/GET "/user/:id" [id]
+  #_(http/GET "/user/:id" [id]
     (views/individual-user id)
     #_(db/get-pastes-by-id id))
   (http/POST "/user/" req
