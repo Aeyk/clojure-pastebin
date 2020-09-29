@@ -12,7 +12,7 @@
   (jdbc/query my-db ["SELECT * FROM pastes WHERE 1=1 AND private = False;"]))
 
 (defn get-paste-by-id [id]
-    (jdbc/query my-db [ "SELECT * FROM pastes WHERE 1=1 AND id = ? AND private = FALSE;" id ]))
+    (jdbc/query my-db [ "SELECT * FROM pastes WHERE 1=1 AND id = ? AND private = 0;" id ]))
 
 (defn get-last-paste []
   (jdbc/query my-db "SELECT * FROM pastes WHERE ID =(SELECT MAX(ID)  AND private = FALSE FROM pastes);"))
@@ -22,10 +22,9 @@
     1))
 
 (defn create-paste [req]
-   ;; req
+  ;; req  
   (jdbc/insert! my-db :pastes
-    (merge {:private false
-            :userid (current-user)} req)))
+    (merge {:userid (current-user)} req)))
 
 
 (defn get-all-users []

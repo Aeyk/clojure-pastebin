@@ -1,5 +1,6 @@
 (ns ixio.views
   (:require
+   [ixio.core :as ixio]
    [ixio.db :as db]
    [hiccup.core :as hiccup]
    [hiccup.page :as page]))
@@ -53,14 +54,9 @@ CAVEATS:
          [:td
           (:id p)]
          [:td
-          (cboolean (:private p))]
+           (:private p)]
          [:td
           (:body p)]]]])))
-(defn cboolean
-  ([i]
-   (not (zero? i)))
-  ([i & is]
-   (map cboolean (conj is i))))
 
 (defn individual-paste [row]
   (let [paste (clojure.edn/read-string
@@ -75,7 +71,7 @@ CAVEATS:
          [:td "PRIVATE? "] [:td "PASTE"]]
         [:tr
          [:td id]
-         [:td (cboolean private)]
+         [:td  private]
          [:td body]]  
         ]])))
 

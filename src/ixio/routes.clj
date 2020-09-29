@@ -9,6 +9,7 @@
             [compojure.handler :as handler]
             [compojure.response :as response]))
 
+
 (http/defroutes main-routes
   (http/GET "/" [] (views/index-page)#_(db/get-all-pastes))
   (http/GET "/pastes" []    
@@ -24,8 +25,8 @@
         ((keyword "last_insert_rowid()")
          (first (db/create-paste (:form-params req)))) "\n")      
       #_(do (db/create-paste (:form-params req))
-          (str (into {}
-                 (first (db/get-last-paste)))))
+            (str (into {}
+                   (first (db/get-last-paste)))))
       #_(get 
           "body")
       
