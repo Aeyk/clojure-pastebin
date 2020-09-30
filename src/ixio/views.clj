@@ -3,7 +3,9 @@
    [ixio.core :as ixio]
    [ixio.db :as db]
    [hiccup.core :as hiccup]
-   [hiccup.page :as page]))
+   [hiccup.page :as page]
+   [hiccup.form :as form]
+   ))
 
 (def url "http://localhost:3000/")
 (def man-string (clojure.string/replace 
@@ -81,6 +83,23 @@ CAVEATS:
      [:pre
       (clojure.edn/read-string 
        (str (first (db/get-last-user))))]]))
+
+(defn create-account-page []
+  (page/html5
+    [:body
+     (form/form-to [:post "/signup"]
+       (form/text-field "username")
+       (form/password-field "password")
+       (form/submit-button "Create Account"))]))
+
+
+(defn login-page []
+  (page/html5
+    [:body
+     (form/form-to [:post "/login"]
+       (form/text-field "username")
+       (form/password-field "password")
+       (form/submit-button "Login"))]))
 
 (defn logged-in-successful []
   (page/html5 [:body "SUCCESS!"]))

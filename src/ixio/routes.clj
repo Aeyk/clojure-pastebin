@@ -4,6 +4,7 @@
             [ixio.views :as views]
             [hiccup.middleware :as mw]
             [ring.middleware.session :as session]
+            [ring.middleware.reload :refer [wrap-reload]]
             [compojure.core :as http]
             [compojure.route :as route]
             [compojure.handler :as handler]
@@ -45,7 +46,9 @@
   #_(http/GET "/user/:id" [id]
     (views/individual-user id)
     #_(db/get-pastes-by-id id))
-  (http/POST "/user/" req
+  (http/GET "/signup" []
+    (views/create-account-page))
+  (http/POST "/signup" req
     #_(str (:params req))
     #_(views/new-account-page req)
     (if (empty? (:params req))
@@ -55,7 +58,9 @@
               id (db/get-last-user)]      
           (str ixio/url "user/"(:id (first id)) "\n"
             #_req)))))
-  (http/POST "/login/" req
+  (http/GET "/login" []
+    (views/login-page))
+  (http/POST "/login" req
     req
     (if (= (:pwordhash (:params req))
           (:pwordhash (first (db/get-user-by-username
@@ -67,5 +72,7 @@
   (route/not-found "Page not found"))
 
 (def app
-  (-> (handler/site main-routes)
-      (mw/wrap-base-url)))
+  (->
+    (handler/site main-routes)
+    (wrap-reload)
+    (mw/wrap-base-url)))
