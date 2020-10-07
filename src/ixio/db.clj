@@ -1,7 +1,7 @@
  (ns ixio.db
    (:require
     [clojure.java.jdbc :as jdbc]
-   [cemerick.friend :as friend]
+    [cemerick.friend :as friend]
     [cemerick.friend.credentials :refer (hash-bcrypt)]))
 
 (def my-db
@@ -33,10 +33,6 @@
 (defn role-id->fully-qualified-role-name [id]
   (fully-qualify-role-keyword
     (first (map :role_name (clojure.java.jdbc/query my-db [ "SELECT * FROM users_roles WHERE id = ? ;" id])))))
-
-
-
-#_(map role-id->fully-qualified-role-name (range 1 4))
 
 
 (map role-id->fully-qualified-role-name
@@ -75,6 +71,30 @@
 
 (defn get-user-by-username [username]
   (jdbc/query my-db [ "SELECT * FROM users WHERE username= ?" username ]))
+
+
+(defn get-users-role-id [username role_id]
+  (jdbc/query my-db [ "SELECT * FROM users WHERE users.role_id= ?" role_id ]))
+
+(defn get-user-by-username-hydrated-roles [username]  
+  (let [dbe (get-user-by-username username)
+        role_id ((juxt #(get :role_id %) identity) dbe)]
+    dbe))
+     
+(let [m (first   (get-user-by-username "mjk"))]
+  (assoc m :roles (role-id->fully-qualified-role-name (:role_id m))))
+
+
+
+;;(update (get-user-by-username "m") :roles 0)
+
+
+(take 1
+  (:roles
+   (ixio.db/get-user-by-username "mjk")
+   (ixio.db/get-user-by-username-hydrated-roles "mjk")
+  ))
+
 
 (defn get-last-user []
   (jdbc/query my-db "SELECT * FROM    users WHERE ID = (SELECT MAX(ID) FROM users);"))

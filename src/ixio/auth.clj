@@ -24,6 +24,7 @@
   (:import java.net.URI))
 
 ;; ((keyword "count(*)") (first (db/count-users)))
+
 (defn- create-user
   [{:keys [username password admin role_id] :as user-data}]    
   (let [user-auth-data (-> (dissoc user-data :admin)
@@ -37,18 +38,21 @@
 
 ;;(create-user  {:username "ooo" :password "m" :role_id 0})
 
+;; (let [m (first   (get-user-by-username "mjk"))]
+;;   )
 
 (def *db-users* ^:dynamic
   #_(into (hash-map))
   #_(map
-    (juxt :id identity))
-  (group-by :id
-    (vec (for [i (db/get-users)]
-           (assoc  i
-             :roles #{::users})))))
+      (juxt :id identity))
+  (let [m (group-by :id
+            (vec (for [i (db/get-users)]
+                   (assoc  i
+                     :roles #{::users}))))]
+    (assoc m :roles (db/role-id->fully-qualified-role-name (:role_id m)))))
 
-
-(db-users)
+(db/role-id->fully-qualified-role-name 2)
+ *db-users*
 
 ;; (def users
 ;;   (atom
@@ -96,12 +100,16 @@
     (h/html5
       [:h2 "Interactive form authentication"]
       [:p "This app demonstrates typical username/password authentication, and a pinch of Friend's authorization capabilities."]
-      (views/signup-form (:flash req))
       views/login-form
+      (views/signup-form (:flash req))
       [:h3 "Current Status " [:small "(this will change when you log in/out)"]]
       [:p (if-let [id (friend/identity req)]
-            (apply str (first id)) 
-            #_{(str (symbol (:username (-> id friend/current-authentication))))
+            (str id )
+            #_(friend/merge-authentication
+                        (resp/redirect (context-uri req id))
+                        (workflows/make-auth {:identity id
+                                              :roles (db/role-id->fully-qualified-role-name id)}))
+                        #_{(str (symbol (:username (-> id friend/current-authentication))))
                (-> id friend/current-authentication)} 
             "anonymous user")]
       [:h3 "Authorization demos"]
@@ -120,7 +128,14 @@
       [:h3 "Logging out"]
       [:p (e/link-to (context-uri req "logout") "Click here to log out") "."]))
   (GET "/login" req   
-    (h/html5 views/login-form))
+    (h/html5 (if-let [id (friend/identity req)]
+               (str id 
+                 (friend/merge-authentication
+                   (resp/redirect (context-uri req id))
+                   (workflows/make-auth {:identity id
+                                         :roles (db/role-id->fully-qualified-role-name (:role_id id))})))
+            "anonymous user")
+      #_views/login-form))
   (GET "/signup" req
     (h/html5 (views/signup-form (:flash req))))
   (POST "/signup"
@@ -129,31 +144,22 @@
           (= password confirm))       
       #_(str (create-user (select-keys params [:username :password :admin :role_id])))
       (let [user (create-user (select-keys params [:username :password :admin :role_id]))]
-        #_(db/create-user user)
         (friend/merge-authentication
           (resp/redirect (context-uri req username))
-          user))
+          (workflows/make-auth {:identity username
+                                :roles (db/role-id->fully-qualified-role-name role_id)})))
       (assoc (resp/redirect (str (:context req) "/")) :flash "passwords don't match!")))
   (POST "/test"
     {{:keys [username password confirm role_id] :as params} :params :as req}
     (let [role_id (db/fully-qualified-role->role-id (db/fully-qualify-role-keyword "user"))
           role_name (db/role-id->fully-qualified-role-name role_id) 
-          user (select-keys params [:username :password])
+          user (select-keys params [:username :password :role_id])
           user (assoc params :role_id role_id)
-          fuser (assoc user :role_id role_id)
-          full-user (merge fuser {:roles #{(symbol (db/role-id->fully-qualified-role-name  (context-uri req role_id)))}})]
-      (db/create-user full-user)      
-
-      #_(str full-user)        
+          fuser (update user :roles conj (symbol (db/role-id->fully-qualified-role-name role_id)))]      
       (friend/merge-authentication
         (resp/redirect (context-uri req username))
-        (make-auth full-user))))
-
-  #_req
-  #_friend/*identity*
-  #_(friend/authorize #{::user} "users.role_id: 0")
-  #_
-  
+         (workflows/make-auth {:identity username
+                               :roles #{(db/role-id->fully-qualified-role-name role_id)}}))))  
   
   (GET "/logout" req
     (friend/logout* (resp/redirect (str (:context req) "/"))))
@@ -163,14 +169,19 @@
     (friend/authorize #{::user} "You're a user!"))
   (GET "/role-admin" req
     (friend/authorize #{::admin} "You're an admin!"))
+  (GET "/role-who" req
+    (h/html5
+      (str
+        (db/role-id->fully-qualified-role-name (inc (:role_id (friend/current-authentication))))
+       )))
+
   (GET "/logout" req
     (friend/logout* (resp/redirect (str (:context req) "/")) ))
   (GET "/:user"
     req
-    (friend/authenticated
-      (h/html5
-        (str
-          (friend/identity req))))
+    (h/html5
+      (friend/authenticated
+        (friend/identity req)))
     #_(friend/authenticated
         (let [user (:user (:params req))
               role_id (:role_id (:params req))
@@ -185,7 +196,7 @@
 
 
 
-(first (db/get-user-by-username "mjk"))
+
 (def page (handler/site
             (friend/authenticate
               routes
