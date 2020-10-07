@@ -1,6 +1,6 @@
  (ns ixio.db
-  (:require [clojure.java.jdbc :as jdbc])
-  (:gen-class))
+   (:require
+    [clojure.java.jdbc :as jdbc]))
 
 
 (def my-db
@@ -17,15 +17,10 @@
 (defn get-last-paste []
   (jdbc/query my-db "SELECT * FROM pastes WHERE ID =(SELECT MAX(ID)  AND private = FALSE FROM pastes);"))
 
-(defn current-user []
-  (if true ;; TODO: (logged-in?) (user-id) (anon-id)
-    1))
-
 (defn create-paste [req]
   ;; req  
   (jdbc/insert! my-db :pastes
-    (merge {:userid (current-user)} req)))
-
+    (merge {:userid (sessions/current-user)} req)))
 
 (defn get-all-users []
   (jdbc/query my-db ["SELECT * FROM users;"]))

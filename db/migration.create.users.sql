@@ -1,5 +1,6 @@
 CREATE TABLE IF NOT EXISTS users (
        id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
        timestamp DATETIME DEFAULT CURRENT_TIMESTAMP,
-       authtoken TEXT NOT NULL);
+       username TEXT NOT NULL,
+       password TEXT NOT NULL);	
        
