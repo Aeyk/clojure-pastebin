@@ -37,13 +37,18 @@
 
 ;;(create-user  {:username "ooo" :password "m" :role_id 0})
 
-(def *db-users* ^:dynamic
-  (into {}
-    (for [i (sort-by :username (db/get-users))]
-      {(:username i) i
-       :roles #{::users}})))
 
-(first *db-users*)
+(def *db-users* ^:dynamic
+  #_(into (hash-map))
+  #_(map
+    (juxt :id identity))
+  (group-by :id
+    (vec (for [i (db/get-users)]
+           (assoc  i
+             :roles #{::users})))))
+
+
+(db-users)
 
 ;; (def users
 ;;   (atom
@@ -70,6 +75,7 @@
 
 (derive ::admin ::user)
 
+((workflows/http-basic :realm "/") {:authorization {:username "m" :password "m"}})
 (defn resolve-uri
   [context uri]
   (let [context (if (instance? URI context) context (URI. context))]
@@ -161,8 +167,8 @@
     (friend/logout* (resp/redirect (str (:context req) "/")) ))
   (GET "/:user"
     req
-    (h/html5
-      (friend/authenticated
+    (friend/authenticated
+      (h/html5
         (str
           (friend/identity req))))
     #_(friend/authenticated
@@ -177,6 +183,9 @@
 	         ", or " (e/link-to (context-uri req "logout") "log out") "."]))
           #_(resp/redirect (str (:context req) "/"))))))
 
+
+
+(first (db/get-user-by-username "mjk"))
 (def page (handler/site
             (friend/authenticate
               routes
@@ -186,7 +195,9 @@
                :unauthorized-handler #(-> (h/html5 [:h2 "You do not have sufficient privileges to access " (:uri %)])
                                         resp/response
                                         (resp/status 401))
-               :credential-fn #(creds/bcrypt-credential-fn *db-users* %)
+               :credential-fn #(creds/bcrypt-credential-fn (comp first db/get-user-by-username) %)
+
+               
                :workflows [(workflows/interactive-form)]})))
 (defn run
   []
