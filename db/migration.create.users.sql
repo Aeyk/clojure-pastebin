@@ -2,5 +2,6 @@ CREATE TABLE IF NOT EXISTS users (
        id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
        timestamp DATETIME DEFAULT CURRENT_TIMESTAMP,
        username TEXT NOT NULL UNIQUE,
-       password TEXT NOT NULL);	
+       password TEXT NOT NULL);
+
        
