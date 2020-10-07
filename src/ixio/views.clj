@@ -136,7 +136,7 @@ CAVEATS:
     [:h3 "Sign up "
      [:small "(Any user/pass combination will do, as you are creating a new account or profile.)"]]
     [:div {:class "row"}
-     [:form {:method "POST" :action "signup" :class "columns small-4"}
+     [:form {:method "POST" :action "test" :class "columns small-4"}
       [:div "Username" [:input {:type "text" :name "username" :required "required"}]]
       [:div "Password" [:input {:type "password" :name "password" :required "required"}]]
       [:div "Confirm" [:input {:type "password" :name "confirm" :required "required"}]]

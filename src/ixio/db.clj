@@ -4,11 +4,43 @@
    [cemerick.friend :as friend]
     [cemerick.friend.credentials :refer (hash-bcrypt)]))
 
-
 (def my-db
   {:classname   "org.sqlite.JDBC"
    :subprotocol "sqlite"
    :subname     "db/pastes_development.db"})
+
+
+(def user-role-map  (group-by :role_name  (vec (clojure.java.jdbc/query my-db [ "SELECT * FROM users_roles ;" ]))))
+;; => {"admin" [{:id 1, :role_name "admin"}], "user" [{:id 2, :role_name "user"}], "anon" [{:id 3, :role_name "anon"}]}
+
+(defn fully-qualify-role-keyword [rk]
+  (keyword (str "ixio.auth/" rk)))
+
+;;; TODO put it in a test 
+(comment (= (fully-qualify-role-keyword "users")
+  :ixio.auth/users))
+;; => true
+(comment (= (role-id->fully-qualified-role-name 0
+  (fully-qualify-role-keyword "users"))))
+
+(symbol (name ::users))
+
+;; => true
+
+(defn fully-qualified-role->role-id [flqr]
+  (first (map :id (get user-role-map (name flqr)))))
+
+(defn role-id->fully-qualified-role-name [id]
+  (fully-qualify-role-keyword
+    (first (map :role_name (clojure.java.jdbc/query my-db [ "SELECT * FROM users_roles WHERE id = ? ;" id])))))
+
+
+
+#_(map role-id->fully-qualified-role-name (range 1 4))
+
+
+(map role-id->fully-qualified-role-name
+  (clojure.java.jdbc/query my-db  ["SELECT role_id FROM users;"]))
 
 (defn get-all-pastes []
   (jdbc/query my-db ["SELECT * FROM pastes WHERE 1=1 AND private = False;"]))
@@ -37,19 +69,22 @@
 (defn get-user-by-id [id]
   (jdbc/query my-db [ "SELECT * FROM users WHERE id= ?" id ]))
 
+(defn get-users []
+  (jdbc/query my-db [ "SELECT * FROM users; "]))
+
+
 (defn get-user-by-username [username]
   (jdbc/query my-db [ "SELECT * FROM users WHERE username= ?" username ]))
 
 (defn get-last-user []
   (jdbc/query my-db "SELECT * FROM    users WHERE ID = (SELECT MAX(ID) FROM users);"))
 
-(defn create-user [{:keys [username password]}]
+(defn create-user [{:keys [username password role_id]}]
     ;; req
   (jdbc/insert! my-db :users
     {:username username
-     :password (hash-bcrypt password)}))
-
- 
+     :password (hash-bcrypt password)
+     :role_id role_id}))
 
 ;;wish this worked
 #_(defn tables

@@ -1,5 +1,5 @@
 (ns ^{:name "Interactive form"
-       :doc "Typical username/password authentication + logout + a pinch of authorization functionality"}
+      :doc "Typical username/password authentication + logout + a pinch of authorization functionality"}
     ixio.auth
   (:require
    [ixio.views :as views]
@@ -7,8 +7,8 @@
    [hiccup.page :as h]
    [hiccup.element :as e] 
    [compojure.core :as compojure :refer (GET POST ANY defroutes)]
-            (compojure [handler :as handler]
-                       [route :as route])
+   (compojure [handler :as handler]
+     [route :as route])
    [cemerick.friend :as friend]
    (cemerick.friend
      [workflows :as workflows]
@@ -25,34 +25,38 @@
 
 ;; ((keyword "count(*)") (first (db/count-users)))
 (defn- create-user
-  [{:keys [username password admin] :as user-data}]    
+  [{:keys [username password admin role_id] :as user-data}]    
   (let [user-auth-data (-> (dissoc user-data :admin)
-                    (assoc :identity username
-                      :password (creds/hash-bcrypt password)
-                      :roles (into #{::user} (when admin [::admin]))))]
-    (db/create-user user-data)
+                         (assoc :identity username
+                           :password (creds/hash-bcrypt password)
+                           :users.role_id role_id
+                           :roles (into #{::user} (when admin [::admin]))))]
+    (let [user-data user-data]
+      (db/create-user user-auth-data))
     user-auth-data))
 
-;; => ({:last_insert_rowid() 28})
-;; => {:username "malik", :password "$2a$10$eF7.wJG3AT8Mz/godfNPwOfrnUObrnTskgNiiuee1J/6LOlGtZvpy", :identity "malik", :roles #{:ixio.auth/user}}
+;;(create-user  {:username "ooo" :password "m" :role_id 0})
 
 (def *db-users* ^:dynamic
   (into {}
-    (for [i (sort-by :username (db/get-user-by-username "m"))]
-      {(:username i) i})))
+    (for [i (sort-by :username (db/get-users))]
+      {(:username i) i
+       :roles #{::users}})))
 
-(def users
-  (atom
-    {"friend"
-     {:username "friend"
-      :password (hash-bcrypt "clojure")
-      :pin "1234" ;; only used by multi-factor
-      :roles #{::user}}
-     "friend-admin"
-     {:username "friend-admin"
-      :password (hash-bcrypt "clojure")
-      :pin "1234" ;; only used by multi-factor
-      :roles #{::admin}}}))
+(first *db-users*)
+
+;; (def users
+;;   (atom
+;;     {"friend"
+;;      {:username "friend"
+;;       :password (hash-bcrypt "clojure")
+;;       :pin "1234" ;; only used by multi-factor
+;;       :roles #{::user}}
+;;      "friend-admin"
+;;      {:username "friend-admin"
+;;       :password (hash-bcrypt "clojure")
+;;       :pin "1234" ;; only used by multi-factor
+;;       :roles #{::admin}}}))
 
 ;;;clojure.core/derive
 ;;; [tag parent]
@@ -79,6 +83,8 @@
     (str (resolve-uri base uri))
     uri))
 
+
+
 (defroutes routes
   (GET "/" req
     (h/html5
@@ -88,9 +94,9 @@
       views/login-form
       [:h3 "Current Status " [:small "(this will change when you log in/out)"]]
       [:p (if-let [id (friend/identity req)]
-            (apply str 
-              {(str (symbol (:username (-> id friend/current-authentication))))
-               (-> id friend/current-authentication)}) 
+            (apply str (first id)) 
+            #_{(str (symbol (:username (-> id friend/current-authentication))))
+               (-> id friend/current-authentication)} 
             "anonymous user")]
       [:h3 "Authorization demos"]
       [:p "Each of these links require particular roles (or, any authentication) to access. "
@@ -107,23 +113,42 @@
               "Requires any authentication, no specific role requirement")]]
       [:h3 "Logging out"]
       [:p (e/link-to (context-uri req "logout") "Click here to log out") "."]))
-  (GET "/login" req
+  (GET "/login" req   
     (h/html5 views/login-form))
-  #_(POST "/login" req
-    )
   (GET "/signup" req
     (h/html5 (views/signup-form (:flash req))))
   (POST "/signup"
-    {{:keys [username password confirm] :as params}  :params :as req}
+    {{:keys [username password confirm role_id] :as params}  :params :as req}
     (if (and (not-any? str/blank? [username password])
           (= password confirm))       
-      #_(str (create-user (select-keys params [:username :password :admin])))
-      (let [user (create-user (select-keys params [:username :password :admin]))]
+      #_(str (create-user (select-keys params [:username :password :admin :role_id])))
+      (let [user (create-user (select-keys params [:username :password :admin :role_id]))]
         #_(db/create-user user)
         (friend/merge-authentication
           (resp/redirect (context-uri req username))
           user))
       (assoc (resp/redirect (str (:context req) "/")) :flash "passwords don't match!")))
+  (POST "/test"
+    {{:keys [username password confirm role_id] :as params} :params :as req}
+    (let [role_id (db/fully-qualified-role->role-id (db/fully-qualify-role-keyword "user"))
+          role_name (db/role-id->fully-qualified-role-name role_id) 
+          user (select-keys params [:username :password])
+          user (assoc params :role_id role_id)
+          fuser (assoc user :role_id role_id)
+          full-user (merge fuser {:roles #{(symbol (db/role-id->fully-qualified-role-name  (context-uri req role_id)))}})]
+      (db/create-user full-user)      
+
+      #_(str full-user)        
+      (friend/merge-authentication
+        (resp/redirect (context-uri req username))
+        (make-auth full-user))))
+
+  #_req
+  #_friend/*identity*
+  #_(friend/authorize #{::user} "users.role_id: 0")
+  #_
+  
+  
   (GET "/logout" req
     (friend/logout* (resp/redirect (str (:context req) "/"))))
   (GET "/requires-authentication" req
@@ -132,15 +157,25 @@
     (friend/authorize #{::user} "You're a user!"))
   (GET "/role-admin" req
     (friend/authorize #{::admin} "You're an admin!"))
-  (GET "/:user" req
-    (friend/authenticated
-      (let [user (:user (req :params))]
-        (if (= user (:username (friend/current-authentication)))
-	  (h/html5
-	    [:h2 (str "Hello, new user " user "!")]
-	    [:p "Return to the " (e/link-to (context-uri req "") "example") 
-	       ", or " (e/link-to (context-uri req "logout") "log out") "."]))
-          (resp/redirect (str (:context req) "/"))))))
+  (GET "/logout" req
+    (friend/logout* (resp/redirect (str (:context req) "/")) ))
+  (GET "/:user"
+    req
+    (h/html5
+      (friend/authenticated
+        (str
+          (friend/identity req))))
+    #_(friend/authenticated
+        (let [user (:user (:params req))
+              role_id (:role_id (:params req))
+              fuser (merge user {:roles #{(symbol (db/role-id->fully-qualified-role-name  (context-uri req role_id)))}})]
+          (str  fuser (friend/current-authentication))
+          #_(if (= user (:username (friend/current-authentication)))
+	      (h/html5
+	        [:h2 (str "Hello, new user " user "!")]
+	        [:p "Return to the " (e/link-to (context-uri req "") "example") 
+	         ", or " (e/link-to (context-uri req "logout") "log out") "."]))
+          #_(resp/redirect (str (:context req) "/"))))))
 
 (def page (handler/site
             (friend/authenticate
@@ -160,3 +195,4 @@
   server)
 
 (run)
+
