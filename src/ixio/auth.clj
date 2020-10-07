@@ -2,6 +2,8 @@
        :doc "Typical username/password authentication + logout + a pinch of authorization functionality"}
     ixio.auth
   (:require
+   [ixio.views :as views]
+   [ixio.db :as db]
    [hiccup.page :as h]
    [hiccup.element :as e] 
    [compojure.core :as compojure :refer (GET POST ANY defroutes)]
@@ -28,8 +30,6 @@
       :password (creds/hash-bcrypt password)
       :roles (into #{::user} (when admin [::admin])))))
 
-(create-user {:username "Doofy" "passwords_suck!" false}) 
-
 (def users
   (atom
     {"friend"
@@ -43,33 +43,17 @@
       :pin "1234" ;; only used by multi-factor
       :roles #{::admin}}}))
 
+;;;clojure.core/derive
+;;; [tag parent]
+;;; [h tag parent]
+;;;Added in 1.0
+;;;  Establishes a parent/child relationship between parent and
+;;;  tag. Parent must be a namespace-qualified symbol or keyword and
+;;;  child can be either a namespace-qualified symbol or keyword or a
+;;;  class. h must be a hierarchy obtained from make-hierarchy, if not
+;;;  supplied defaults to, and modifies, the global hierarchy.
+
 (derive ::admin ::user)
-
-(defn- signup-form
-  [flash]
-  [:div {:class "row"}
-   [:div {:class "columns small-12"}
-    [:h3 "Sign up "
-     [:small "(Any user/pass combination will do, as you are creating a new account or profile.)"]]
-    [:div {:class "row"}
-     [:form {:method "POST" :action "signup" :class "columns small-4"}
-      [:div "Username" [:input {:type "text" :name "username" :required "required"}]]
-      [:div "Password" [:input {:type "password" :name "password" :required "required"}]]
-      [:div "Confirm" [:input {:type "password" :name "confirm" :required "required"}]]
-      [:div "Make you an admin? " [:input {:type "checkbox" :name "admin"}]]
-      [:div
-       [:input {:type "submit" :class "button" :value "Sign up"}]
-       [:span {:style "padding:0 0 0 10px;color:red;"} flash]]]]]])
-
-(def login-form
-  [:div {:class "row"}
-   [:div {:class "columns small-12"}
-    [:h3 "Login"]
-    [:div {:class "row"}
-     [:form {:method "POST" :action "login" :class "columns small-4"}
-      [:div "Username" [:input {:type "text" :name "username"}]]
-      [:div "Password" [:input {:type "password" :name "password"}]]
-      [:div [:input {:type "submit" :class "button" :value "Login"}]]]]]])
 
 (defn resolve-uri
   [context uri]
@@ -89,8 +73,8 @@
     (h/html5
       [:h2 "Interactive form authentication"]
       [:p "This app demonstrates typical username/password authentication, and a pinch of Friend's authorization capabilities."]
-      (signup-form (:flash req))
-      login-form
+      (views/signup-form (:flash req))
+      views/login-form
       [:h3 "Current Status " [:small "(this will change when you log in/out)"]]
       [:p (if-let [identity (friend/identity req)]
             (apply str "Logged in, with these roles: "
@@ -112,13 +96,13 @@
       [:h3 "Logging out"]
       [:p (e/link-to (context-uri req "logout") "Click here to log out") "."]))
   (GET "/login" req
-    (h/html5 login-form))
+    (h/html5 views/login-form))
   (POST "/signup"
     {{:keys [username password confirm] :as params}  :params :as req}
     (if (and (not-any? str/blank? [username password confirm])
           (= password confirm))
-      (let [user (create-user (select-keys params [:username :password :admin]))]
-        ;; HERE IS WHERE YOU'D PUSH THE USER INTO YOUR DATABASES if desired
+      (let [user (create-user (select-keys params [:username :password]))
+            db-u (db/create-user (select-keys params [:username :password]))]
         (friend/merge-authentication
           (resp/redirect (context-uri req username))
           user))

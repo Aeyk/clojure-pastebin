@@ -5,59 +5,40 @@
             [hiccup.middleware :as mw]
             [ring.middleware.session :as session]
             [ring.middleware.reload :refer [wrap-reload]]
+            [ring.middleware.session :refer [wrap-session]]
+            [ring.middleware.cookies :refer [wrap-cookies]]
+            [ring.middleware.session.cookie :refer [cookie-store]]
+            [ring.util.response :refer [redirect]]
             [compojure.core :as http]
             [compojure.route :as route]
             [compojure.handler :as handler]
             [compojure.response :as response]))
 
+(defn is-logged-in? [] true)
 
 (http/defroutes main-routes
-  (http/GET "/" [] (views/index-page)#_(db/get-all-pastes))
+  (http/GET "/" [] (views/index-page))  
   (http/GET "/pastes" []    
     (views/pastes-page))
-
   (http/GET "/paste/:id" id
-    (views/individual-paste (:id (:params id))))
-  
+    (views/individual-paste (:id (:params id))))  
   (http/POST "/paste" req      
     (if (empty? (:body (:params req)))
       (views/index-page)
       (str ixio/url "paste/"
         ((keyword "last_insert_rowid()")
-         (first (db/create-paste (:form-params req)))) "\n")      
-      #_(do (db/create-paste (:form-params req))
-            (str (into {}
-                   (first (db/get-last-paste)))))
-      #_(get 
-          "body")
-      
-      #_(do
-          (let [ins (db/create-paste
-                      (into {}
-                        (clojure.edn/read-string (:body (:params req)))))
-                id (db/get-last-paste)]      
-            (str ixio/url "/paste/"((keyword "last_insert_rowid()")
-                                    (first ins)))))))
+         (first (db/create-paste (:form-params req)))) "\n")))
   (http/GET "/favicon.ico" []
     "Hello World") 
-  #_(http/GET "/:id" [id]
-    (views/individual-paste id)
-    #_(db/get-pastes-by-id id))
-  #_(http/GET "/user/:id" [id]
-    (views/individual-user id)
-    #_(db/get-pastes-by-id id))
   (http/GET "/signup" []
     (views/create-account-page))
   (http/POST "/signup" req
-    #_(str (:params req))
-    #_(views/new-account-page req)
     (if (empty? (:params req))
       (views/new-account-page req)
       (do
         (let [ins (db/create-user (:params req))
               id (db/get-last-user)]      
-          (str ixio/url "user/"(:id (first id)) "\n"
-            #_req)))))
+          (redirect (str ixio/url "user"))))))
   (http/GET "/login" []
     (views/login-page))
   (http/POST "/login" req
@@ -65,14 +46,24 @@
     (if (= (:pwordhash (:params req))
           (:pwordhash (first (db/get-user-by-username
                                (:username (:params req))))))
-      (views/logged-in-successful)
-      (views/logged-in-unsuccessful)))
-  
+      (str  req)
+      (str  req)
+      #_(views/logged-in-successful)
+      #_(views/logged-in-unsuccessful)))
+  (http/GET "/user" []
+    (if (is-logged-in?)
+      (do
+        (views/current-user-page (ixio.sessions/current-user)))
+      (redirect "/login")))
+  (http/GET "/what" req
+    (str req))
   (route/resources "/")
   (route/not-found "Page not found"))
 
 (def app
   (->
     (handler/site main-routes)
+    (wrap-cookies)
     (wrap-reload)
+    (wrap-session)
     (mw/wrap-base-url)))

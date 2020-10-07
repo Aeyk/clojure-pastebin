@@ -4,8 +4,8 @@
    [ixio.db :as db]
    [hiccup.core :as hiccup]
    [hiccup.page :as page]
-   [hiccup.form :as form]
-   ))
+   [hiccup.form :as form])
+  )
 
 (def url "http://localhost:3000/")
 (def man-string (clojure.string/replace 
@@ -89,7 +89,7 @@ CAVEATS:
     [:body
      (form/form-to [:post "/signup"]
        (form/text-field "username")
-       (form/password-field "password")
+       (form/password-field "pwordhash")
        (form/submit-button "Create Account"))]))
 
 
@@ -100,6 +100,21 @@ CAVEATS:
        (form/text-field "username")
        (form/password-field "password")
        (form/submit-button "Login"))]))
+
+(defn current-user-page [name]
+  (let [paste (clojure.edn/read-string
+                (str (first (db/get-user-by-username name))))
+        id (:id paste)
+        username (:username paste)]
+    (page/html5
+      [:body
+       [:table
+        [:tr [:td "id"]
+         [:td "username"] ]
+        [:tr
+         [:td id]
+         [:td  username]]]])))
+
 
 (defn logged-in-successful []
   (page/html5 [:body "SUCCESS!"]))
@@ -114,3 +129,28 @@ CAVEATS:
 ;; #object[org.eclipse.jetty.server.HttpInput]
 
 
+(defn signup-form
+  [flash]
+  [:div {:class "row"}
+   [:div {:class "columns small-12"}
+    [:h3 "Sign up "
+     [:small "(Any user/pass combination will do, as you are creating a new account or profile.)"]]
+    [:div {:class "row"}
+     [:form {:method "POST" :action "signup" :class "columns small-4"}
+      [:div "Username" [:input {:type "text" :name "username" :required "required"}]]
+      [:div "Password" [:input {:type "password" :name "password" :required "required"}]]
+      [:div "Confirm" [:input {:type "password" :name "confirm" :required "required"}]]
+      [:div "Make you an admin? " [:input {:type "checkbox" :name "admin"}]]
+      [:div
+       [:input {:type "submit" :class "button" :value "Sign up"}]
+       [:span {:style "padding:0 0 0 10px;color:red;"} flash]]]]]])
+
+(def login-form
+  [:div {:class "row"}
+   [:div {:class "columns small-12"}
+    [:h3 "Login"]
+    [:div {:class "row"}
+     [:form {:method "POST" :action "login" :class "columns small-4"}
+      [:div "Username" [:input {:type "text" :name "username"}]]
+      [:div "Password" [:input {:type "password" :name "password"}]]
+      [:div [:input {:type "submit" :class "button" :value "Login"}]]]]]])
