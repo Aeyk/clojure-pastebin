@@ -90,6 +90,7 @@
       [:h2 "Interactive form authentication"]
       [:p "This app demonstrates typical username/password authentication, and a pinch of Friend's authorization capabilities."]
       (signup-form (:flash req))
+      login-form
       [:h3 "Current Status " [:small "(this will change when you log in/out)"]]
       [:p (if-let [identity (friend/identity req)]
             (apply str "Logged in, with these roles: "
@@ -129,7 +130,16 @@
   (GET "/role-user" req
     (friend/authorize #{::user} "You're a user!"))
   (GET "/role-admin" req
-    (friend/authorize #{::admin} "You're an admin!")))
+    (friend/authorize #{::admin} "You're an admin!"))
+  (GET "/:user" req
+    (friend/authenticated
+      (let [user (:user (req :params))]
+        (if (= user (:username (friend/current-authentication)))
+	  (h/html5
+	    [:h2 (str "Hello, new user " user "!")]
+	    [:p "Return to the " (e/link-to (context-uri req "") "example") 
+	       ", or " (e/link-to (context-uri req "logout") "log out") "."]))
+          (resp/redirect (str (:context req) "/"))))))
 
 (def page (handler/site
             (friend/authenticate
