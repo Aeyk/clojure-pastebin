@@ -23,12 +23,19 @@
    [ring.adapter.jetty :refer [run-jetty]])
   (:import java.net.URI))
 
+;; ((keyword "count(*)") (first (db/count-users)))
 (defn- create-user
-  [{:keys [username password admin] :as user-data}]
-  (-> (dissoc user-data :admin)
-    (assoc :identity username
-      :password (creds/hash-bcrypt password)
-      :roles (into #{::user} (when admin [::admin])))))
+  [{:keys [username password admin] :as user-data}]    
+  (let [user-auth-data (-> (dissoc user-data :admin)
+                    (assoc :identity username
+                      :password (creds/hash-bcrypt password)
+                      :roles (into #{::user} (when admin [::admin]))))]
+    (db/create-user user-data)
+    user-auth-data))
+
+;; => ({:last_insert_rowid() 28})
+;; => {:username "malik", :password "$2a$10$eF7.wJG3AT8Mz/godfNPwOfrnUObrnTskgNiiuee1J/6LOlGtZvpy", :identity "malik", :roles #{:ixio.auth/user}}
+
 
 (def users
   (atom
@@ -76,9 +83,10 @@
       (views/signup-form (:flash req))
       views/login-form
       [:h3 "Current Status " [:small "(this will change when you log in/out)"]]
-      [:p (if-let [identity (friend/identity req)]
-            (apply str "Logged in, with these roles: "
-              (-> identity friend/current-authentication :roles))
+      [:p (if-let [id (friend/identity req)]
+            (apply str 
+              {(str (symbol (:username (-> id friend/current-authentication))))
+               (-> id friend/current-authentication)}) 
             "anonymous user")]
       [:h3 "Authorization demos"]
       [:p "Each of these links require particular roles (or, any authentication) to access. "
@@ -97,12 +105,17 @@
       [:p (e/link-to (context-uri req "logout") "Click here to log out") "."]))
   (GET "/login" req
     (h/html5 views/login-form))
+  ;; (POST "/login" req
+  ;;   (db/create-user req))
+  (GET "/signup" req
+    (h/html5 (views/signup-form (:flash req))))
   (POST "/signup"
     {{:keys [username password confirm] :as params}  :params :as req}
-    (if (and (not-any? str/blank? [username password confirm])
-          (= password confirm))
-      (let [user (create-user (select-keys params [:username :password]))
-            db-u (db/create-user (select-keys params [:username :password]))]
+    (if (and (not-any? str/blank? [username password])
+          (= password confirm))       
+      #_(str (create-user (select-keys params [:username :password :admin])))
+      (let [user (create-user (select-keys params [:username :password :admin]))]
+        #_(db/create-user user)
         (friend/merge-authentication
           (resp/redirect (context-uri req username))
           user))
@@ -136,6 +149,9 @@
                                         (resp/status 401))
                :credential-fn #(creds/bcrypt-credential-fn @users %)
                :workflows [(workflows/interactive-form)]})))
+
+@users
+
 
 (defn run
   []

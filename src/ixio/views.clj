@@ -4,8 +4,8 @@
    [ixio.db :as db]
    [hiccup.core :as hiccup]
    [hiccup.page :as page]
-   [hiccup.form :as form])
-  )
+   [hiccup.form :as form]))
+
 
 (def url "http://localhost:3000/")
 (def man-string (clojure.string/replace 

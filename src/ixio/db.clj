@@ -1,6 +1,8 @@
  (ns ixio.db
    (:require
-    [clojure.java.jdbc :as jdbc]))
+    [clojure.java.jdbc :as jdbc]
+   [cemerick.friend :as friend]
+    [cemerick.friend.credentials :refer (hash-bcrypt)]))
 
 
 (def my-db
@@ -20,10 +22,17 @@
 (defn create-paste [req]
   ;; req  
   (jdbc/insert! my-db :pastes
-    (merge {:userid (sessions/current-user)} req)))
+    (if-let [id (friend/identity req)]
+      (merge {:userid id} req)
+      (merge {:userid 0} req))))
 
 (defn get-all-users []
   (jdbc/query my-db ["SELECT * FROM users;"]))
+
+
+(defn count-users []
+  (jdbc/query my-db ["SELECT COUNT(*) FROM users;"]))
+
 
 (defn get-user-by-id [id]
   (jdbc/query my-db [ "SELECT * FROM users WHERE id= ?" id ]))
@@ -31,21 +40,21 @@
 (defn get-user-by-username [username]
   (jdbc/query my-db [ "SELECT * FROM users WHERE username= ?" username ]))
 
-
 (defn get-last-user []
   (jdbc/query my-db "SELECT * FROM    users WHERE ID = (SELECT MAX(ID) FROM users);"))
 
-(defn create-user [req]
-   ;; req
-  (jdbc/insert! my-db :users req)) 
+(defn create-user [{:keys [username password]}]
+    ;; req
+  (jdbc/insert! my-db :users
+    {:username username
+     :password (hash-bcrypt password)}))
 
-
-
+ 
 
 ;;wish this worked
 #_(defn tables
-  []
-  (query my-db [".tables"]))
+    []
+    (query my-db [".tables"]))
 
 ;; todo how to get table names / column names
 
