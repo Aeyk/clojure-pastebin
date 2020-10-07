@@ -36,6 +36,10 @@
 ;; => ({:last_insert_rowid() 28})
 ;; => {:username "malik", :password "$2a$10$eF7.wJG3AT8Mz/godfNPwOfrnUObrnTskgNiiuee1J/6LOlGtZvpy", :identity "malik", :roles #{:ixio.auth/user}}
 
+(def *db-users* ^:dynamic
+  (into {}
+    (for [i (sort-by :username (db/get-user-by-username "m"))]
+      {(:username i) i})))
 
 (def users
   (atom
@@ -105,8 +109,8 @@
       [:p (e/link-to (context-uri req "logout") "Click here to log out") "."]))
   (GET "/login" req
     (h/html5 views/login-form))
-  ;; (POST "/login" req
-  ;;   (db/create-user req))
+  #_(POST "/login" req
+    )
   (GET "/signup" req
     (h/html5 (views/signup-form (:flash req))))
   (POST "/signup"
@@ -147,12 +151,8 @@
                :unauthorized-handler #(-> (h/html5 [:h2 "You do not have sufficient privileges to access " (:uri %)])
                                         resp/response
                                         (resp/status 401))
-               :credential-fn #(creds/bcrypt-credential-fn @users %)
+               :credential-fn #(creds/bcrypt-credential-fn *db-users* %)
                :workflows [(workflows/interactive-form)]})))
-
-@users
-
-
 (defn run
   []
   (defonce ^:private server
