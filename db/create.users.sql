@@ -4,4 +4,6 @@ CREATE TABLE IF NOT EXISTS users (
        username TEXT NOT NULL UNIQUE,
        password TEXT NOT NULL);
 
+
+ALTER TABLE users ADD COLUMN role_id INTEGER REFERENCES users_roles(id);
        
