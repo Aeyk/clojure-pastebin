@@ -36,7 +36,7 @@
       (db/create-user user-auth-data))
     user-auth-data))
 
-;;(create-user  {:username "ooo" :password "m" :role_id 0})
+;;(create-user  {:username "do" :password "m" :role_id 0})
 
 ;; (let [m (first   (get-user-by-username "mjk"))]
 ;;   )

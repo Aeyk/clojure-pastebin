@@ -80,18 +80,18 @@
   (let [dbe (get-user-by-username username)
         role_id ((juxt #(get :role_id %) identity) dbe)]
     dbe))
+
      
 (let [m (first   (get-user-by-username "mjk"))]
   (assoc m :roles (role-id->fully-qualified-role-name (:role_id m))))
 
 
-
 ;;(update (get-user-by-username "m") :roles 0)
 
-
+bv
 (take 1
   (:roles
-   (ixio.db/get-user-by-username "mjk")
+   (ixio.db/get-user-by-username "m")
    (ixio.db/get-user-by-username-hydrated-roles "mjk")
   ))
 
