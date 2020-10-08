@@ -20,7 +20,7 @@
             (cemerick.friend
               [workflows :as workflows]
               [credentials :as creds])
-            [ring.adapter.jetty :refer [run-jetty]])
+            p[ring.adapter.jetty :refer [run-jetty]])
     (:import java.net.URI))
 
 (defn is-logged-in? [] true)
