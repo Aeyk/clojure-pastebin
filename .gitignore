@@ -11,3 +11,5 @@ pom.xml.asc
 .hgignore
 .hg/
 /db/pastes_development.db
+/TODO*
+TODO.org
