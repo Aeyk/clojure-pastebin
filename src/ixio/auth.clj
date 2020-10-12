@@ -30,13 +30,11 @@
   (let [user-auth-data (-> (dissoc user-data :admin)
                          (assoc :identity username
                            :password (creds/hash-bcrypt password)
-                           :users.role_id role_id
                            :roles (into #{::user} (when admin [::admin]))))]
     (let [user-data user-data]
-      (db/create-user user-auth-data))
+      (db/create-regular-user user-auth-data))
     user-auth-data))
 
-;;(create-user  {:username "do" :password "m" :role_id 0})
 
 ;; (let [m (first   (get-user-by-username "mjk"))]
 ;;   )
@@ -49,9 +47,8 @@
             (vec (for [i (db/get-users)]
                    (assoc  i
                      :roles #{::users}))))]
-    (assoc m :roles (db/role-id->fully-qualified-role-name (:role_id m)))))
+    (dissoc m :roles)))
 
-(db/role-id->fully-qualified-role-name 2)
  *db-users*
 
 ;; (def users
@@ -214,7 +211,7 @@
   []
   (defonce ^:private server
     (ring.adapter.jetty/run-jetty #'page {:port 8080 :join? false}))
-  server)
+  (.start server))
 
+#_(.stop (run))
 (run)
-

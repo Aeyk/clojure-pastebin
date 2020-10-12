@@ -146,7 +146,7 @@
        #(-> (h/html5 [:h2 "You do not have sufficient privileges to access " (:uri %)])
           resp/response
           (resp/status 401))
-       :credential-fn #(creds/bcrypt-credential-fn (comp first db/get-user-by-username) %)       
+       :credential-fn #(creds/bcrypt-credential-fn (comp first db/get-user-by-username ) %)       
        :workflows [(workflows/interactive-form)]})))
 
 
