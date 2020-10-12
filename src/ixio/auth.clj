@@ -95,11 +95,10 @@
 (defroutes routes
   (GET "/" req
     (h/html5
-      [:h2 "Interactive form authentication"]
-      [:p "This app demonstrates typical username/password authentication, and a pinch of Friend's authorization capabilities."]
+      [:h1 "IX IO"]
       views/login-form
       (views/signup-form (:flash req))
-      [:h3 "Current Status " [:small "(this will change when you log in/out)"]]
+      [:h3 "Current Status" [:small "(this will change when you log in/out)"]]
       [:p (if-let [id (friend/identity req)]
             (str id )
             #_(friend/merge-authentication
@@ -110,18 +109,15 @@
                (-> id friend/current-authentication)} 
             "anonymous user")]
       [:h3 "Authorization demos"]
-      [:p "Each of these links require particular roles (or, any authentication) to access. "
-       "If you're not authenticated, you will be redirected to a dedicated login page. "
-       "If you're already authenticated, but do not meet the authorization requirements "
-       "(e.g. you don't have the proper role), then you'll get an Unauthorized HTTP response."]
-      
-      [:ul
-       [:li
-        (e/link-to
-          (context-uri req "role-user") "Requires the `user` role")]
-       [:li (e/link-to (context-uri req "role-admin") "Requires the `admin` role")]
-       [:li (e/link-to (context-uri req "requires-authentication")
-              "Requires any authentication, no specific role requirement")]]
+      [:p 
+       [:p "TODO FIXME"]
+       [:ul
+        [:li
+         (e/link-to
+           (context-uri req "role-user") "Requires the `user` role")]
+        [:li (e/link-to (context-uri req "role-admin") "Requires the `admin` role")]
+        [:li (e/link-to (context-uri req "requires-authentication")
+               "Requires any authentication, no specific role requirement")]]]
       [:h3 "Logging out"]
       [:p (e/link-to (context-uri req "logout") "Click here to log out") "."]))
   (GET "/login" req   
@@ -211,7 +207,8 @@
   []
   (defonce ^:private server
     (ring.adapter.jetty/run-jetty #'page {:port 8080 :join? false}))
-  (.start server))
+  (.start server)
+  server)
 
 #_(.stop (run))
 (run)
