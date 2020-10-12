@@ -88,23 +88,24 @@
 
 ;;(update (get-user-by-username "m") :roles 0)
 
-bv
-(take 1
-  (:roles
-   (ixio.db/get-user-by-username "m")
-   (ixio.db/get-user-by-username-hydrated-roles "mjk")
-  ))
+
+;; (take 1
+;;   (:roles
+;;    (ixio.db/get-user-by-username "m")
+;;    (ixio.db/get-user-by-username-hydrated-roles "mjk")
+;;   ))
 
 
 (defn get-last-user []
   (jdbc/query my-db "SELECT * FROM    users WHERE ID = (SELECT MAX(ID) FROM users);"))
 
-(defn create-user [{:keys [username password role_id]}]
+(defn create-regular-user [{:keys [username password]}]
     ;; req
   (jdbc/insert! my-db :users
     {:username username
      :password (hash-bcrypt password)
-     :role_id role_id}))
+     :users.role_id 2}))
+
 
 ;;wish this worked
 #_(defn tables
