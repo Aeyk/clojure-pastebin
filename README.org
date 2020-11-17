@@ -7,4 +7,3 @@ This is a small text-based HTTP pastebin server written in clojure.
 lein run
 #+end_src
 Then visit [[http://localhost:3000/]] g
-k
