@@ -1,0 +1,10 @@
+* Clojure Pastebin
+
+This is a small text-based HTTP pastebin server written in clojure.
+
+** Usage
+#+begin_src sh
+lein run
+#+end_src
+Then visit [[http://localhost:3000/]] g
+k
