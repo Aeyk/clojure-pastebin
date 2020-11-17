@@ -1,4 +1,3 @@
-* TODO add actual password hashing
 * TODO add optional email address
 ** TODO reset password email 
 * TODO private pastes
@@ -6,4 +5,21 @@ would need to modify my table so that pastes can have an
 optional belongs_to: FKID and required private: bool columns
 * TODO session management / cookies
 * TODO UI
+** DONE 0/0 Login / Log out / Sign Up
+* DONE add actual password hashing
+thanks friend!
+
+* TODO tests
+** Views
+Ensure that every route has an view: login, signup, paste are still missing.
+
+** Logic and DB
+Wire together userid and (TODO:) authentication 
+Ensure that database gets emptied every 24 hours. 
+
+** Authentication
+Ensure users cant see other's posts marked as private
+Ensure users can see their own posts even if marked as private
+Allow users to delete their own posts
+
 

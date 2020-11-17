@@ -1,0 +1,23 @@
+Malik Kenedy
+
+
+Table of Contents
+─────────────────
+
+1. Clojure Pastebin
+.. 1. Usage
+
+
+1 Clojure Pastebin
+══════════════════
+
+  This is a small text-based HTTP pastebin server written in clojure.
+
+
+1.1 Usage
+─────────
+
+  ┌────
+  │ lein run
+  └────
+  Then visit <http://localhost:3000/>
